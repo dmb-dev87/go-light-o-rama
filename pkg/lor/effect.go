@@ -5,7 +5,7 @@ type Effect byte
 
 const (
 	// EffectTwinkle creates random fades with a slight delay.
-	EffectTwinkle Effect = 0x06
+	EffectTwinkle Effect = flagTwinkle
 	// EffectShimmer creates rapid flashing with fading between flashes.
-	EffectShimmer Effect = 0x07
+	EffectShimmer Effect = flagShimmer
 )
