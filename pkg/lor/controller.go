@@ -32,6 +32,30 @@ func (c Controller) SendHeartbeat() error {
 	return err
 }
 
+func (c Controller) On(ch Channel) error {
+	_, err := c.port.Write([]byte{
+		0x00,
+		c.ID,
+		flagOn,
+		ch.addr(),
+		0x00,
+	})
+	return err
+}
+
+func (c Controller) BulkOn(m *mask) error {
+	var payload = []byte{
+		0x00,
+		c.ID,
+		m.length | flagOn,
+	}
+	payload = append(payload, m.b...)
+	payload = append(payload, 0x00)
+
+	_, err := c.port.Write(payload)
+	return err
+}
+
 // SetBrightness writes a command payload to set the channel's brightness to the specified value.
 func (c Controller) SetBrightness(ch Channel, val float64) error {
 	_, err := c.port.Write([]byte{

@@ -1,6 +1,7 @@
 package lor
 
 const (
+	flagOn                = 0x01
 	flagSet               = 0x03
 	flagFade              = 0x04
 	flagTwinkle           = 0x06
