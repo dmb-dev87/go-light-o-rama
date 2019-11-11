@@ -7,5 +7,5 @@ const (
 	// EffectTwinkle creates random fades with a slight delay.
 	EffectTwinkle Effect = 0x06
 	// EffectShimmer creates rapid flashing with fading between flashes.
-	EffectShimmer        = 0x07
+	EffectShimmer Effect = 0x07
 )
