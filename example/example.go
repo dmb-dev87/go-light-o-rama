@@ -4,11 +4,14 @@ import (
 	"github.com/Cryptkeeper/go-lightorama/pkg/lor"
 	"github.com/tarm/serial"
 	"log"
+	"math/rand"
 	"time"
 )
 
 func main() {
-	var cont = &lor.Controller{Id: 0x01}
+	var cont = &lor.Controller{
+		Id: 0x01,
+	}
 
 	// Open the serial port used for communications with the unit
 	err := cont.OpenPort(&serial.Config{
@@ -21,14 +24,15 @@ func main() {
 
 	log.Println("Connected to LOR unit!")
 
-	// TODO: wait for init signal
-	time.Sleep(time.Second * 2)
-
-	cont.Fade(0, 0, 1, time.Second*5)
-
-	for range time.Tick(time.Millisecond * 500) {
+	for range time.Tick(lor.DefaultHeartbeatRate) {
+		// Maintain the connection by consistently sending the heartbeat packet
 		if err := cont.SendHeartbeat(); err != nil {
 			log.Fatal("Lost connection!")
+		}
+
+		// Constantly randomize the brightness of channel 1
+		if err := cont.SetBrightness(0, rand.Float64()); err != nil {
+			log.Fatal("Failed to set brightness!")
 		}
 	}
 }
