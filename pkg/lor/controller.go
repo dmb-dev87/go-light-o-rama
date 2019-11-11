@@ -24,8 +24,6 @@ func (c *Controller) OpenPort(conf *serial.Config) error {
 	return c.SendHeartbeat()
 }
 
-var heartbeatPayload = []byte{0x00, 0xFF, 0x81, 0x56, 0x00}
-
 // SendHeartbeat writes a heartbeat payload to the currently open serial port.
 func (c Controller) SendHeartbeat() error {
 	_, err := c.port.Write(heartbeatPayload)
@@ -33,80 +31,30 @@ func (c Controller) SendHeartbeat() error {
 }
 
 func (c Controller) On(ch Channel) error {
-	_, err := c.port.Write([]byte{
-		0x00,
-		c.ID,
-		commandOn,
-		ch.addr(),
-		0x00,
-	})
-	return err
+	return c.writeSingleCommand(commandOn, ch)
 }
 
 func (c Controller) BulkOn(m *mask) error {
-	var payload = []byte{
-		0x00,
-		c.ID,
-		m.offset | commandOn,
-	}
-	payload = append(payload, m.b...)
-	payload = append(payload, 0x00)
-
-	_, err := c.port.Write(payload)
-	return err
+	return c.writeMultiCommand(m.offset | commandOn, m)
 }
 
 // SetBrightness writes a command payload to set the channel's brightness to the specified value.
 func (c Controller) SetBrightness(ch Channel, val float64) error {
-	_, err := c.port.Write([]byte{
-		0x00,
-		c.ID,
-		commandSetBrightness,
-		encodeBrightness(val),
-		ch.addr(),
-		0x00,
-	})
-	return err
+	return c.writeSingleCommand(commandSetBrightness, ch, encodeBrightness(val))
 }
 
 func (c Controller) BulkSetBrightness(m *mask, val float64) error {
-	var payload = []byte{
-		0x00,
-		c.ID,
-		m.offset | commandSetBrightness,
-		encodeBrightness(val),
-	}
-	payload = append(payload, m.b...)
-	payload = append(payload, 0x00)
-
-	_, err := c.port.Write(payload)
-	return err
+	return c.writeMultiCommand(m.offset|commandSetBrightness, m, encodeBrightness(val))
 }
 
 // SetEffect writes a command payload to set a channel's active effect.
 // This will reset the channel's brightness.
 func (c Controller) SetEffect(ch Channel, effect Effect) error {
-	_, err := c.port.Write([]byte{
-		0x00,
-		c.ID,
-		byte(effect),
-		ch.addr(),
-		0x00,
-	})
-	return err
+	return c.writeSingleCommand(byte(effect), ch)
 }
 
 func (c Controller) BulkSetEffect(m *mask, effect Effect) error {
-	var payload = []byte{
-		0x00,
-		c.ID,
-		m.offset | byte(effect),
-	}
-	payload = append(payload, m.b...)
-	payload = append(payload, 0x00)
-
-	_, err := c.port.Write(payload)
-	return err
+	return c.writeMultiCommand(m.offset | byte(effect), m)
 }
 
 // Fade writes a command payload to fade a channel's brightness from and to the specified values within the specified duration.
@@ -116,18 +64,7 @@ func (c Controller) Fade(ch Channel, from, to float64, dur time.Duration) error 
 		return err
 	}
 
-	_, err = c.port.Write([]byte{
-		0x00,
-		c.ID,
-		commandFade,
-		encodeBrightness(from),
-		encodeBrightness(to),
-		t[0],
-		t[1],
-		ch.addr(),
-		0x00,
-	})
-	return err
+	return c.writeSingleCommand(commandFade, ch, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
 }
 
 func (c Controller) BulkFade(m *mask, from, to float64, dur time.Duration) error {
@@ -136,20 +73,7 @@ func (c Controller) BulkFade(m *mask, from, to float64, dur time.Duration) error
 		return err
 	}
 
-	var payload = []byte{
-		0x00,
-		c.ID,
-		m.offset | commandFade,
-		encodeBrightness(from),
-		encodeBrightness(to),
-		t[0],
-		t[1],
-	}
-	payload = append(payload, m.b...)
-	payload = append(payload, 0x00)
-
-	_, err = c.port.Write(payload)
-	return err
+	return c.writeMultiCommand(m.offset | commandFade, m, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
 }
 
 // FadeWithEffect writes a command payload to fade a channel's brightness from and to the specified values within the specified duration.
@@ -160,18 +84,32 @@ func (c Controller) FadeWithEffect(ch Channel, from, to float64, dur time.Durati
 		return err
 	}
 
-	_, err = c.port.Write([]byte{
+	return c.writeSingleCommand(byte(effect), ch, 0x81, commandFade, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
+}
+
+func (c Controller) writeSingleCommand(id byte, ch Channel, meta ...byte) error {
+	var b = []byte{
 		0x00,
 		c.ID,
-		byte(effect),
-		ch.addr(),
-		0x81,
-		commandFade,
-		encodeBrightness(from),
-		encodeBrightness(to),
-		t[0],
-		t[1],
+		id,
+	}
+	b = append(b, meta...)
+	b = append(b, ch.addr(), 0x00)
+
+	_, err := c.port.Write(b)
+	return err
+}
+
+func (c Controller) writeMultiCommand(id byte, m *mask, meta ...byte) error {
+	var b = []byte{
 		0x00,
-	})
+		c.ID,
+		id,
+	}
+	b = append(b, meta...)
+	b = append(b, m.b...)
+	b = append(b, 0x00)
+
+	_, err := c.port.Write(b)
 	return err
 }
