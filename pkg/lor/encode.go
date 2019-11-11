@@ -1,7 +1,6 @@
 package lor
 
 import (
-	"bytes"
 	"encoding/binary"
 	"math"
 	"time"
@@ -30,14 +29,14 @@ const (
 	durationMin           = time.Millisecond * 100
 )
 
-func encodeDuration(dur time.Duration) ([2]byte, error) {
+func encodeDuration(dur time.Duration) []byte {
 	if dur > durationMax {
 		dur = durationMax
 	} else if dur < durationMin {
 		dur = durationMin
 	}
 
-	var b [2]byte
+	var b = make([]byte, 2)
 
 	var val = int(math.Round(timeMax / (dur.Seconds() / 0.1)))
 
@@ -45,15 +44,8 @@ func encodeDuration(dur time.Duration) ([2]byte, error) {
 		b[0] = timeEmptyByte
 		b[1] = byte(val)
 	} else {
-		var buf = new(bytes.Buffer)
-
-		err := binary.Write(buf, binary.BigEndian, uint16(val))
-		if err != nil {
-			return b, err
-		}
-
-		copy(b[:], buf.Bytes())
+		binary.BigEndian.PutUint16(b, uint16(val))
 	}
 
-	return b, nil
+	return b
 }

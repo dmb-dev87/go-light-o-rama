@@ -39,7 +39,7 @@ func (c Controller) On(ch Channel) error {
 // BulkOn writes a multi command payload to set all masked channels to 100% brightness.
 // This saves 1 byte over a BulkSetBrightness call.
 func (c Controller) BulkOn(m *Mask) error {
-	return c.writeMultiCommand(m.offset | commandOn, m)
+	return c.writeMultiCommand(m.offset|commandOn, m)
 }
 
 // SetBrightness writes a command payload to set the channel's brightness to the specified value.
@@ -60,37 +60,25 @@ func (c Controller) SetEffect(ch Channel, effect Effect) error {
 
 // BulkSetEffect writes a multi command payload to set all masked channels active effect.
 func (c Controller) BulkSetEffect(m *Mask, effect Effect) error {
-	return c.writeMultiCommand(m.offset | byte(effect), m)
+	return c.writeMultiCommand(m.offset|byte(effect), m)
 }
 
 // Fade writes a command payload to fade a channel's brightness from and to the specified values within the specified duration.
 func (c Controller) Fade(ch Channel, from, to float64, dur time.Duration) error {
-	t, err := encodeDuration(dur)
-	if err != nil {
-		return err
-	}
-
+	var t = encodeDuration(dur)
 	return c.writeSingleCommand(commandFade, ch, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
 }
 
 // BulkFade writes a multi command payload to fade all masked channels brightness from and to the specified values within the specified duration.
 func (c Controller) BulkFade(m *Mask, from, to float64, dur time.Duration) error {
-	t, err := encodeDuration(dur)
-	if err != nil {
-		return err
-	}
-
-	return c.writeMultiCommand(m.offset | commandFade, m, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
+	var t = encodeDuration(dur)
+	return c.writeMultiCommand(m.offset|commandFade, m, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
 }
 
 // FadeWithEffect writes a command payload to fade a channel's brightness from and to the specified values within the specified duration.
 // The effect will be applied alongside the fade effect.
 func (c Controller) FadeWithEffect(ch Channel, from, to float64, dur time.Duration, effect Effect) error {
-	t, err := encodeDuration(dur)
-	if err != nil {
-		return err
-	}
-
+	var t = encodeDuration(dur)
 	return c.writeSingleCommand(byte(effect), ch, 0x81, commandFade, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
 }
 
