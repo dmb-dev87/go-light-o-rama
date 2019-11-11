@@ -33,7 +33,7 @@ func (c Controller) SetBrightness(ch Channel, val float64) error {
 		c.Id,
 		flagSet,
 		encodeBrightness(val),
-		ch.address(),
+		ch.addr(),
 		0x00,
 	})
 	return err
@@ -44,7 +44,7 @@ func (c Controller) SetEffect(ch Channel, effect Effect) error {
 		0x00,
 		c.Id,
 		byte(effect),
-		ch.address(),
+		ch.addr(),
 		0x00,
 	})
 	return err
@@ -64,7 +64,7 @@ func (c Controller) Fade(ch Channel, from float64, to float64, dur time.Duration
 		encodeBrightness(to),
 		t[0],
 		t[1],
-		ch.address(),
+		ch.addr(),
 		0x00,
 	})
 	return err
@@ -80,7 +80,7 @@ func (c Controller) FadeWithEffect(ch Channel, from float64, to float64, dur tim
 		0x00,
 		c.Id,
 		byte(effect),
-		ch.address(),
+		ch.addr(),
 		flagExtendedStatement,
 		flagFade,
 		encodeBrightness(from),
