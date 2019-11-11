@@ -21,11 +21,11 @@ func (c *Controller) OpenPort(conf *serial.Config) error {
 	}
 
 	c.port = port
-	return c.SendHeartbeat()
+	return c.WriteHeartbeat()
 }
 
-// SendHeartbeat writes a heartbeat payload to the currently open serial port.
-func (c Controller) SendHeartbeat() error {
+// WriteHeartbeat writes a heartbeat payload to the currently open serial port.
+func (c Controller) WriteHeartbeat() error {
 	_, err := c.port.Write(heartbeatPayload)
 	return err
 }

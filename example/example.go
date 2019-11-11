@@ -26,7 +26,7 @@ func main() {
 
 	for range time.Tick(lor.DefaultHeartbeatRate) {
 		// Maintain the connection by consistently sending the heartbeat packet
-		if err := cont.SendHeartbeat(); err != nil {
+		if err := cont.WriteHeartbeat(); err != nil {
 			log.Fatal("Lost connection!")
 		}
 
