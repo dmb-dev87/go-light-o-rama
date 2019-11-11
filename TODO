@@ -1,3 +1,0 @@
-- Wait for controller init awk to prevent sending commands into the void
-- Brightness curve behavior
-- Optionally prevent sending "current" state data to avoid bandwidth waste
