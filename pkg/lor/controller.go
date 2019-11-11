@@ -36,7 +36,7 @@ func (c Controller) On(ch Channel) error {
 	_, err := c.port.Write([]byte{
 		0x00,
 		c.ID,
-		flagOn,
+		commandOn,
 		ch.addr(),
 		0x00,
 	})
@@ -47,7 +47,7 @@ func (c Controller) BulkOn(m *mask) error {
 	var payload = []byte{
 		0x00,
 		c.ID,
-		m.offset | flagOn,
+		m.offset | commandOn,
 	}
 	payload = append(payload, m.b...)
 	payload = append(payload, 0x00)
@@ -61,7 +61,7 @@ func (c Controller) SetBrightness(ch Channel, val float64) error {
 	_, err := c.port.Write([]byte{
 		0x00,
 		c.ID,
-		flagSet,
+		commandSetBrightness,
 		encodeBrightness(val),
 		ch.addr(),
 		0x00,
@@ -73,7 +73,7 @@ func (c Controller) BulkSetBrightness(m *mask, val float64) error {
 	var payload = []byte{
 		0x00,
 		c.ID,
-		m.offset | flagSet,
+		m.offset | commandSetBrightness,
 		encodeBrightness(val),
 	}
 	payload = append(payload, m.b...)
@@ -119,7 +119,7 @@ func (c Controller) Fade(ch Channel, from, to float64, dur time.Duration) error 
 	_, err = c.port.Write([]byte{
 		0x00,
 		c.ID,
-		flagFade,
+		commandFade,
 		encodeBrightness(from),
 		encodeBrightness(to),
 		t[0],
@@ -139,7 +139,7 @@ func (c Controller) BulkFade(m *mask, from, to float64, dur time.Duration) error
 	var payload = []byte{
 		0x00,
 		c.ID,
-		m.offset | flagFade,
+		m.offset | commandFade,
 		encodeBrightness(from),
 		encodeBrightness(to),
 		t[0],
@@ -165,8 +165,8 @@ func (c Controller) FadeWithEffect(ch Channel, from, to float64, dur time.Durati
 		c.ID,
 		byte(effect),
 		ch.addr(),
-		flagExtendedStatement,
-		flagFade,
+		0x81,
+		commandFade,
 		encodeBrightness(from),
 		encodeBrightness(to),
 		t[0],
