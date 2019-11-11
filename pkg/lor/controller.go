@@ -30,11 +30,15 @@ func (c Controller) SendHeartbeat() error {
 	return err
 }
 
+// On writes a command payload to set the channel to 100% brightness.
+// This saves 1 byte over a SetBrightness call.
 func (c Controller) On(ch Channel) error {
 	return c.writeSingleCommand(commandOn, ch)
 }
 
-func (c Controller) BulkOn(m *mask) error {
+// BulkOn writes a multi command payload to set all masked channels to 100% brightness.
+// This saves 1 byte over a BulkSetBrightness call.
+func (c Controller) BulkOn(m *Mask) error {
 	return c.writeMultiCommand(m.offset | commandOn, m)
 }
 
@@ -43,7 +47,8 @@ func (c Controller) SetBrightness(ch Channel, val float64) error {
 	return c.writeSingleCommand(commandSetBrightness, ch, encodeBrightness(val))
 }
 
-func (c Controller) BulkSetBrightness(m *mask, val float64) error {
+// BulkSetBrightness writes a multi command payload to set all masked channels brightness to the specified value.
+func (c Controller) BulkSetBrightness(m *Mask, val float64) error {
 	return c.writeMultiCommand(m.offset|commandSetBrightness, m, encodeBrightness(val))
 }
 
@@ -53,7 +58,8 @@ func (c Controller) SetEffect(ch Channel, effect Effect) error {
 	return c.writeSingleCommand(byte(effect), ch)
 }
 
-func (c Controller) BulkSetEffect(m *mask, effect Effect) error {
+// BulkSetEffect writes a multi command payload to set all masked channels active effect.
+func (c Controller) BulkSetEffect(m *Mask, effect Effect) error {
 	return c.writeMultiCommand(m.offset | byte(effect), m)
 }
 
@@ -67,7 +73,8 @@ func (c Controller) Fade(ch Channel, from, to float64, dur time.Duration) error 
 	return c.writeSingleCommand(commandFade, ch, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
 }
 
-func (c Controller) BulkFade(m *mask, from, to float64, dur time.Duration) error {
+// BulkFade writes a multi command payload to fade all masked channels brightness from and to the specified values within the specified duration.
+func (c Controller) BulkFade(m *Mask, from, to float64, dur time.Duration) error {
 	t, err := encodeDuration(dur)
 	if err != nil {
 		return err
@@ -100,7 +107,7 @@ func (c Controller) writeSingleCommand(id byte, ch Channel, meta ...byte) error 
 	return err
 }
 
-func (c Controller) writeMultiCommand(id byte, m *mask, meta ...byte) error {
+func (c Controller) writeMultiCommand(id byte, m *Mask, meta ...byte) error {
 	var b = []byte{
 		0x00,
 		c.ID,

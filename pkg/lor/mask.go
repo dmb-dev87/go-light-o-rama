@@ -7,17 +7,12 @@ import (
 
 var errBadLength = errors.New("bad bitLength")
 
-var magicOffsetTable = map[byte]byte{
-	8:  0x30,
-	16: 0x10,
-}
-
-type mask struct {
+type Mask struct {
 	offset byte
 	b      []byte
 }
 
-func (m *mask) Set(ch Channel, val bool) {
+func (m *Mask) Set(ch Channel, val bool) {
 	var bitIndex = byte(ch) % 8
 	var byteIndex = int(math.Floor(float64(ch) / 8))
 
@@ -28,7 +23,7 @@ func (m *mask) Set(ch Channel, val bool) {
 	}
 }
 
-func (m *mask) SetAll(val bool) {
+func (m *Mask) SetAll(val bool) {
 	for i := 0; i < len(m.b); i++ {
 		if val {
 			m.b[i] = 0xFF
@@ -38,13 +33,13 @@ func (m *mask) SetAll(val bool) {
 	}
 }
 
-func NewMask(bitLength byte) (*mask, error) {
+func NewMask(bitLength byte) (*Mask, error) {
 	var offset, ok = magicOffsetTable[bitLength]
 	if !ok {
 		return nil, errBadLength
 	}
 
-	return &mask{
+	return &Mask{
 		offset: offset,
 		b:      make([]byte, int(math.Ceil(float64(bitLength)/8))),
 	}, nil
