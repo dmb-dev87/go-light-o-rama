@@ -47,7 +47,7 @@ func (c Controller) BulkOn(m *mask) error {
 	var payload = []byte{
 		0x00,
 		c.ID,
-		m.length | flagOn,
+		m.offset | flagOn,
 	}
 	payload = append(payload, m.b...)
 	payload = append(payload, 0x00)
@@ -73,7 +73,7 @@ func (c Controller) BulkSetBrightness(m *mask, val float64) error {
 	var payload = []byte{
 		0x00,
 		c.ID,
-		m.length | flagSet,
+		m.offset | flagSet,
 		encodeBrightness(val),
 	}
 	payload = append(payload, m.b...)
@@ -100,7 +100,7 @@ func (c Controller) BulkSetEffect(m *mask, effect Effect) error {
 	var payload = []byte{
 		0x00,
 		c.ID,
-		m.length | byte(effect),
+		m.offset | byte(effect),
 	}
 	payload = append(payload, m.b...)
 	payload = append(payload, 0x00)
@@ -139,7 +139,7 @@ func (c Controller) BulkFade(m *mask, from, to float64, dur time.Duration) error
 	var payload = []byte{
 		0x00,
 		c.ID,
-		m.length | flagFade,
+		m.offset | flagFade,
 		encodeBrightness(from),
 		encodeBrightness(to),
 		t[0],

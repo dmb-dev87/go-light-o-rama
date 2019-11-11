@@ -1,11 +1,19 @@
 package lor
 
 import (
+	"errors"
 	"math"
 )
 
+var errBadLength = errors.New("bad bitLength")
+
+var magicOffsetTable = map[byte]byte{
+	8:  0x30,
+	16: 0x10,
+}
+
 type mask struct {
-	length byte
+	offset byte
 	b      []byte
 }
 
@@ -30,9 +38,14 @@ func (m *mask) SetAll(val bool) {
 	}
 }
 
-func NewMask(bitLength byte) *mask {
-	return &mask{
-		length: bitLength,
-		b:      make([]byte, int(math.Ceil(float64(bitLength)/8))),
+func NewMask(bitLength byte) (*mask, error) {
+	var offset, ok = magicOffsetTable[bitLength]
+	if !ok {
+		return nil, errBadLength
 	}
+
+	return &mask{
+		offset: offset,
+		b:      make([]byte, int(math.Ceil(float64(bitLength)/8))),
+	}, nil
 }
