@@ -1,4 +1,4 @@
-# go-lightorama [![Go Report Card](https://goreportcard.com/badge/github.com/Cryptkeeper/go-lightorama)](https://goreportcard.com/report/github.com/Cryptkeeper/go-lightorama) [![GoDoc](https://godoc.org/github.com/Cryptkeeper/go-lightorama?status.svg)](https://godoc.org/github.com/Cryptkeeper/go-lightorama)
+# go-lightorama [![Go Report Card](https://goreportcard.com/badge/github.com/Cryptkeeper/go-lightorama)](https://goreportcard.com/report/github.com/Cryptkeeper/go-lightorama) [![GoDoc](https://godoc.org/github.com/Cryptkeeper/go-lightorama/pkg/lor?status.svg)](https://godoc.org/github.com/Cryptkeeper/go-lightorama/pkg/lor)
 A Go library for controlling [Light-O-Rama (LOR) AC units](http://www1.lightorama.com/pro-ac-light-controllers/) such as the LOR160X series. This library is designed as a black box for higher level applications to control LOR units and is not a functional application of its own. 
 
 ## Usage
