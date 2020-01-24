@@ -47,9 +47,19 @@ func (c Controller) SetBrightness(ch Channel, val float64) error {
 	return c.writeSingleCommand(commandSetBrightness, ch, encodeBrightness(val))
 }
 
+// SetBrightnessAbs writes a command payload to set the channel's brightness to the specified absolute value.
+func (c Controller) SetBrightnessAbs(ch Channel, val byte) error {
+	return c.writeSingleCommand(commandSetBrightness, ch, val)
+}
+
 // BulkSetBrightness writes a multi command payload to set all masked channels brightness to the specified value.
 func (c Controller) BulkSetBrightness(m *Mask, val float64) error {
 	return c.writeMultiCommand(m.offset|commandSetBrightness, m, encodeBrightness(val))
+}
+
+// BulkSetBrightnessAbs writes a multi command payload to set all masked channels brightness to the specified absolute value.
+func (c Controller) BulkSetBrightnessAbs(m *Mask, val byte) error {
+	return c.writeMultiCommand(m.offset|commandSetBrightness, m, val)
 }
 
 // SetEffect writes a command payload to set a channel's active effect.
