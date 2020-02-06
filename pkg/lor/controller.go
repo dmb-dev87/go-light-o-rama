@@ -15,9 +15,9 @@ type Controller struct {
 	port *serial.Port
 }
 
-// ControllerWithPort returns a *Controller using a given, pre-existing *serial.Port.
+// NewControllerWithPort returns a *Controller using a given, pre-existing *serial.Port.
 // This enables multiple Controller instances using a shared *serial.Port.
-func ControllerWithPort(unit Unit, port *serial.Port) *Controller {
+func NewControllerWithPort(unit Unit, port *serial.Port) *Controller {
 	return &Controller{
 		Unit: unit,
 		port: port,
@@ -107,7 +107,7 @@ func (c Controller) FadeWithEffect(ch Channel, from, to float64, dur time.Durati
 func (c Controller) writeSingleCommand(id byte, ch Channel, meta ...byte) error {
 	var b = []byte{
 		0x00,
-		c.Unit,
+		byte(c.Unit),
 		id,
 	}
 	b = append(b, meta...)
@@ -120,7 +120,7 @@ func (c Controller) writeSingleCommand(id byte, ch Channel, meta ...byte) error 
 func (c Controller) writeMultiCommand(id byte, m *Mask, meta ...byte) error {
 	var b = []byte{
 		0x00,
-		c.Unit,
+		byte(c.Unit),
 		id,
 	}
 	b = append(b, meta...)
