@@ -10,7 +10,7 @@ import (
 
 func main() {
 	var cont = &lor.Controller{
-		ID: 0x01,
+		Unit: 0x01,
 	}
 
 	// Open the serial port used for communications with the unit

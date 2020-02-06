@@ -107,7 +107,7 @@ func (c Controller) FadeWithEffect(ch Channel, from, to float64, dur time.Durati
 func (c Controller) writeSingleCommand(id byte, ch Channel, meta ...byte) error {
 	var b = []byte{
 		0x00,
-		c.ID,
+		c.Unit,
 		id,
 	}
 	b = append(b, meta...)
@@ -120,7 +120,7 @@ func (c Controller) writeSingleCommand(id byte, ch Channel, meta ...byte) error 
 func (c Controller) writeMultiCommand(id byte, m *Mask, meta ...byte) error {
 	var b = []byte{
 		0x00,
-		c.ID,
+		c.Unit,
 		id,
 	}
 	b = append(b, meta...)
