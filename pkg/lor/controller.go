@@ -38,7 +38,7 @@ func (c *Controller) OpenPort(conf *serial.Config) error {
 
 // WriteHeartbeat writes a heartbeat payload to the currently open serial port.
 func (c Controller) WriteHeartbeat() error {
-	_, err := c.port.Write(heartbeatPayload)
+	_, err := c.port.Write(HeartbeatPayload)
 	return err
 }
 
