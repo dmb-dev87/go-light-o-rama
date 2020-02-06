@@ -9,12 +9,8 @@ import (
 )
 
 func main() {
-	var cont = &lor.Controller{
-		Unit: 0x01,
-	}
-
 	// Open the serial port used for communications with the unit
-	err := cont.OpenPort(&serial.Config{
+	port, err := serial.OpenPort(&serial.Config{
 		Name: "/dev/tty.usbserial-A603LKCU",
 		Baud: 19200,
 	})
@@ -22,16 +18,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var cont = lor.NewController(0x01, port)
+
+	// Write an initial connection heartbeat
+	_, _ = cont.Heartbeat()
+
 	log.Println("Connected to LOR unit!")
 
 	for range time.Tick(lor.DefaultHeartbeatRate) {
 		// Maintain the connection by consistently sending the heartbeat packet
-		if err := cont.WriteHeartbeat(); err != nil {
+		if _, err := cont.Heartbeat(); err != nil {
 			log.Fatal("Lost connection!")
 		}
 
 		// Constantly randomize the brightness of channel 1
-		if err := cont.SetBrightness(0, rand.Float64()); err != nil {
+		if _, err := cont.SetBrightness(0, rand.Float64()); err != nil {
 			log.Fatal("Failed to set brightness!")
 		}
 	}

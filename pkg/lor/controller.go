@@ -1,7 +1,7 @@
 package lor
 
 import (
-	"github.com/tarm/serial"
+	"io"
 	"time"
 )
 
@@ -11,122 +11,68 @@ type Unit byte
 // Controller represents a LOR unit.
 // ID is the unit's network ID as externally configured.
 type Controller struct {
+	io.Writer
 	Unit Unit
-	port *serial.Port
 }
 
-// NewControllerWithPort returns a *Controller using a given, pre-existing *serial.Port.
-// This enables multiple Controller instances using a shared *serial.Port.
-func NewControllerWithPort(unit Unit, port *serial.Port) *Controller {
+// NewController returns a new Controller instance using the given io.Writer.
+func NewController(unit Unit, writer io.Writer) *Controller {
 	return &Controller{
-		Unit: unit,
-		port: port,
+		Writer: writer,
+		Unit:   unit,
 	}
 }
 
-// OpenPort opens a serial port with the given serial.Config object.
-// Once opened, OpenPort will send an initial heartbeat (using #SendHeartbeat) to test the connection.
-func (c *Controller) OpenPort(conf *serial.Config) error {
-	port, err := serial.OpenPort(conf)
-	if err != nil {
-		return err
-	}
-
-	c.port = port
-	return c.WriteHeartbeat()
-}
-
-// WriteHeartbeat writes a heartbeat payload to the currently open serial port.
-func (c Controller) WriteHeartbeat() error {
-	_, err := c.port.Write(HeartbeatPayload)
-	return err
+// Heartbeat writes a heartbeat payload to the currently open serial port.
+func (c Controller) Heartbeat() (n int, err error) {
+	return c.Write(Heartbeat())
 }
 
 // On writes a command payload to set the channel to 100% brightness.
 // This saves 1 byte over a SetBrightness call.
-func (c Controller) On(ch Channel) error {
-	return c.writeSingleCommand(commandOn, ch)
+func (c Controller) On(ch Channel) (n int, err error) {
+	return c.Write(On(c.Unit, ch))
 }
 
-// BulkOn writes a multi command payload to set all masked channels to 100% brightness.
-// This saves 1 byte over a BulkSetBrightness call.
-func (c Controller) BulkOn(m *Mask) error {
-	return c.writeMultiCommand(m.offset|commandOn, m)
+// MaskedOn writes a multi command payload to set all masked channels to 100% brightness.
+// This saves 1 byte over a MaskedSetBrightness call.
+func (c Controller) MaskedOn(mask *Mask) (n int, err error) {
+	return c.Write(MaskedOn(c.Unit, mask))
 }
 
 // SetBrightness writes a command payload to set the channel's brightness to the specified value.
-func (c Controller) SetBrightness(ch Channel, val float64) error {
-	return c.writeSingleCommand(commandSetBrightness, ch, encodeBrightness(val))
+func (c Controller) SetBrightness(ch Channel, val float64) (n int, err error) {
+	return c.Write(SetBrightness(c.Unit, ch, val))
 }
 
-// SetBrightnessAbs writes a command payload to set the channel's brightness to the specified absolute value.
-func (c Controller) SetBrightnessAbs(ch Channel, val byte) error {
-	return c.writeSingleCommand(commandSetBrightness, ch, val)
-}
-
-// BulkSetBrightness writes a multi command payload to set all masked channels brightness to the specified value.
-func (c Controller) BulkSetBrightness(m *Mask, val float64) error {
-	return c.writeMultiCommand(m.offset|commandSetBrightness, m, encodeBrightness(val))
-}
-
-// BulkSetBrightnessAbs writes a multi command payload to set all masked channels brightness to the specified absolute value.
-func (c Controller) BulkSetBrightnessAbs(m *Mask, val byte) error {
-	return c.writeMultiCommand(m.offset|commandSetBrightness, m, val)
+// MaskedSetBrightness writes a multi command payload to set all masked channels brightness to the specified value.
+func (c Controller) MaskedSetBrightness(mask *Mask, val float64) (n int, err error) {
+	return c.Write(MaskedSetBrightness(c.Unit, mask, val))
 }
 
 // SetEffect writes a command payload to set a channel's active effect.
 // This will reset the channel's brightness.
-func (c Controller) SetEffect(ch Channel, effect Effect) error {
-	return c.writeSingleCommand(byte(effect), ch)
+func (c Controller) SetEffect(ch Channel, effect Effect) (n int, err error) {
+	return c.Write(SetEffect(c.Unit, ch, effect))
 }
 
-// BulkSetEffect writes a multi command payload to set all masked channels active effect.
-func (c Controller) BulkSetEffect(m *Mask, effect Effect) error {
-	return c.writeMultiCommand(m.offset|byte(effect), m)
+// MaskedSetEffect writes a multi command payload to set all masked channels active effect.
+func (c Controller) MaskedSetEffect(mask *Mask, effect Effect) (n int, err error) {
+	return c.Write(MaskedSetEffect(c.Unit, mask, effect))
 }
 
 // Fade writes a command payload to fade a channel's brightness from and to the specified values within the specified duration.
-func (c Controller) Fade(ch Channel, from, to float64, dur time.Duration) error {
-	var t = encodeDuration(dur)
-	return c.writeSingleCommand(commandFade, ch, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
+func (c Controller) Fade(ch Channel, from, to float64, dur time.Duration) (n int, err error) {
+	return c.Write(Fade(c.Unit, ch, from, to, dur))
 }
 
-// BulkFade writes a multi command payload to fade all masked channels brightness from and to the specified values within the specified duration.
-func (c Controller) BulkFade(m *Mask, from, to float64, dur time.Duration) error {
-	var t = encodeDuration(dur)
-	return c.writeMultiCommand(m.offset|commandFade, m, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
+// MaskedFade writes a multi command payload to fade all masked channels brightness from and to the specified values within the specified duration.
+func (c Controller) MaskedFade(mask *Mask, from, to float64, dur time.Duration) (n int, err error) {
+	return c.Write(MaskedFade(c.Unit, mask, from, to, dur))
 }
 
 // FadeWithEffect writes a command payload to fade a channel's brightness from and to the specified values within the specified duration.
 // The effect will be applied alongside the fade effect.
-func (c Controller) FadeWithEffect(ch Channel, from, to float64, dur time.Duration, effect Effect) error {
-	var t = encodeDuration(dur)
-	return c.writeSingleCommand(byte(effect), ch, 0x81, commandFade, encodeBrightness(from), encodeBrightness(to), t[0], t[1])
-}
-
-func (c Controller) writeSingleCommand(id byte, ch Channel, meta ...byte) error {
-	var b = []byte{
-		0x00,
-		byte(c.Unit),
-		id,
-	}
-	b = append(b, meta...)
-	b = append(b, ch.addr(), 0x00)
-
-	_, err := c.port.Write(b)
-	return err
-}
-
-func (c Controller) writeMultiCommand(id byte, m *Mask, meta ...byte) error {
-	var b = []byte{
-		0x00,
-		byte(c.Unit),
-		id,
-	}
-	b = append(b, meta...)
-	b = append(b, m.b...)
-	b = append(b, 0x00)
-
-	_, err := c.port.Write(b)
-	return err
+func (c Controller) FadeWithEffect(ch Channel, from, to float64, dur time.Duration, effect Effect) (n int, err error) {
+	return c.Write(FadeWithEffect(c.Unit, ch, from, to, dur, effect))
 }
