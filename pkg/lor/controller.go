@@ -5,11 +5,23 @@ import (
 	"time"
 )
 
+// Unit represents a unique, addressable Controller.
+type Unit byte
+
 // Controller represents a LOR unit.
 // ID is the unit's network ID as externally configured.
 type Controller struct {
-	ID   byte
+	Unit Unit
 	port *serial.Port
+}
+
+// ControllerWithPort returns a *Controller using a given, pre-existing *serial.Port.
+// This enables multiple Controller instances using a shared *serial.Port.
+func ControllerWithPort(unit Unit, port *serial.Port) *Controller {
+	return &Controller{
+		Unit: unit,
+		port: port,
+	}
 }
 
 // OpenPort opens a serial port with the given serial.Config object.
